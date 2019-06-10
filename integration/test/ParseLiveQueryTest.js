@@ -33,6 +33,25 @@ describe('Parse LiveQuery', () => {
     await object.save();
   });
 
+  it('can subscribe to update query with original', async (done) => {
+    const object = new TestObject({ foo: 'bar' });
+    await object.save();
+
+    const query = new Parse.Query(TestObject);
+    query.equalTo('objectId', object.id);
+    const subscription = await query.subscribe();
+
+    subscription.on('update', (object, original) => {
+      console.log(original.toJSON());
+      console.log(object.toJSON());
+      assert.equal(original.get('foo'), 'bar');
+      assert.equal(object.get('foo'), 'baz');
+      done();
+    })
+    object.set({ foo: 'baz' });
+    await object.save();
+  });
+
   it('can subscribe to multiple queries', async () => {
     const objectA = new TestObject();
     const objectB = new TestObject();
